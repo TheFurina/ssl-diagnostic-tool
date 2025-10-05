@@ -23,13 +23,12 @@
 ## 系统要求
 
 - Python 3.7 或更高版本
-- Windows 操作系统（主要针对 Windows 环境测试）
 
 ## 快速开始
 
-### 方法一：使用批处理文件（推荐）
+### 方法一：使用批处理文件（仅 Windows）
 
-1. 下载项目文件到同一目录：
+1. 下载一键包：
    - `ssl_diagnostic_tool.py`
    - `run_ssl_tool.bat`
 
@@ -91,10 +90,10 @@ python ssl_diagnostic_tool.py
    - 更新操作系统根证书
    - 重新安装系统证书库
 
-## 项目结构
+## 项目结构（Windows 一键包）
 
 ```
-ssl-diagnostic-tool/
+ssl_diagnostic_toolkit/
 ├── ssl_diagnostic_tool.py  # 主程序文件
 ├── run_ssl_tool.bat        # Windows 启动脚本
 ├── venv/                   # 虚拟环境目录（自动创建）
