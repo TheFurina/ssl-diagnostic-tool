@@ -1,0 +1,9 @@
+{
+    "proxy": {
+        "enable": false,
+        "http": "",
+        "https": "",
+        "username": "",
+        "password": ""
+    }
+}
