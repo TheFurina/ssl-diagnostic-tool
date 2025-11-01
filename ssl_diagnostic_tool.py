@@ -8,22 +8,39 @@ import json
 import os
 
 def load_config():
-    """加载配置文件"""
+    """加载配置文件，如果不存在则创建默认配置"""
     config_path = os.path.join(os.path.dirname(__file__), 'config.json')
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
             return config
     except FileNotFoundError:
-        print("配置文件 config.json 不存在，使用默认配置")
-        return {"proxy": {"enable": False}}
+        print("配置文件 config.json 不存在，创建默认配置文件...")
+        # 创建默认配置
+        default_config = {
+            "proxy": {
+                "enable": False,
+                "http": "",
+                "https": "",
+                "username": "",
+                "password": ""
+            }
+        }
+        # 写入默认配置到文件
+        try:
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(default_config, f, indent=4, ensure_ascii=False)
+            print("已创建默认配置文件")
+        except Exception as e:
+            print(f"创建配置文件失败: {e}")
+        return default_config
     except json.JSONDecodeError:
         print("配置文件格式错误，使用默认配置")
         return {"proxy": {"enable": False}}
 
 def get_user_input():
     """获取用户输入的测试网址"""
-    print("=== SSL 连接诊断工具 ===")
+    print("=== SSL 连接诊断工具 v1.2.0 ===")
     print(f"Windows 版本: {platform.platform()}")
     print(f"Python 版本: {sys.version}")
     print(f"OpenSSL 版本: {ssl.OPENSSL_VERSION}")
