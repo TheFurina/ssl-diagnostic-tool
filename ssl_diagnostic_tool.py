@@ -38,30 +38,33 @@ def load_config():
         print("配置文件格式错误，使用默认配置")
         return {"proxy": {"enable": False}}
 
-def get_user_input():
-    """获取用户输入的测试网址"""
-    print("=== SSL 连接诊断工具 v1.2.0 ===")
-    print(f"Windows 版本: {platform.platform()}")
-    print(f"Python 版本: {sys.version}")
-    print(f"OpenSSL 版本: {ssl.OPENSSL_VERSION}")
-    
-    # 显示代理配置状态
-    config = load_config()
-    if config.get("proxy", {}).get("enable", False):
-        proxy_http = config["proxy"].get("http", "未设置")
-        print(f"代理已启用: {proxy_http}")
-    else:
-        print("代理未启用")
+def get_user_input(is_first_run=True):
+    """获取用户输入的测试网址，is_first_run控制是否显示标题和系统信息"""
+    # 仅在首次运行时显示标题和系统信息
+    if is_first_run:
+        print("=== SSL 连接诊断工具 v1.2.1 ===")
+        print(f"Windows 版本: {platform.platform()}")
+        print(f"Python 版本: {sys.version}")
+        print(f"OpenSSL 版本: {ssl.OPENSSL_VERSION}")
+        
+        # 显示代理配置状态
+        config = load_config()
+        if config.get("proxy", {}).get("enable", False):
+            proxy_http = config["proxy"].get("http", "未设置")
+            print(f"代理已启用: {proxy_http}")
+        else:
+            print("代理未启用")
     
     # 获取测试网址，必须输入
     while True:
-        test_url = input("\n请输入要测试的网址 (必须包含 http:// 或 https://): ").strip()
+        prompt = "\n请输入要测试的网址 (必须包含 http:// 或 https://): " if is_first_run else "请输入要测试的网址 (必须包含 http:// 或 https://): "
+        test_url = input(prompt).strip()
         
         if not test_url:
             print("❌ 网址不能为空，请重新输入")
             continue
             
-        if not test_url.startswith(('http://', 'https://')):
+        if not test_url.startswith(("http://", "https://")):
             print("❌ 网址必须以 http:// 或 https:// 开头，请重新输入")
             continue
             
@@ -252,30 +255,65 @@ def print_summary(results):
     
     # 给出具体建议
     print("\n建议解决方案:")
-    if not system_success and certifi_success:
-        print("1. 在代码中使用 certifi 证书:")
-        print("   ssl_context = ssl.create_default_context(cafile=certifi.where())")
-        
-    if disable_ssl_success and not system_success:
-        print("1. 临时解决方案（不推荐生产环境）:")
-        print("   connector = aiohttp.TCPConnector(ssl=False)")
-        print("2. 长期解决方案: 更新系统根证书")
-        
+    suggestion_count = 1
+    
+    # 创建建议列表，按优先级排序
+    suggestions = []
+    
+    # 根据不同情况添加建议
     if all_failed:
-        print("1. 检查网络连接和防火墙设置")
-        print("2. 验证目标网址是否正确可用")
-        print("3. 尝试使用其他网络环境测试")
-        
+        suggestions.extend([
+            "检查网络连接和防火墙设置",
+            "验证目标网址是否正确可用",
+            "尝试使用其他网络环境测试"
+        ])
+    
+    if disable_ssl_success and not system_success:
+        suggestions.extend([
+            "临时解决方案（不推荐生产环境）:\n   connector = aiohttp.TCPConnector(ssl=False)",
+            "长期解决方案: 更新系统根证书"
+        ])
+    
+    if not system_success and certifi_success:
+        suggestions.append("在代码中使用 certifi 证书:\n   ssl_context = ssl.create_default_context(cafile=certifi.where())")
+    
     if relaxed_success and not system_success:
-        print("1. 检查目标网址与证书中的主机名是否匹配")
-        print("2. 如果是内部服务器，可能需要将证书添加到信任库")
+        suggestions.extend([
+            "检查目标网址与证书中的主机名是否匹配",
+            "如果是内部服务器，可能需要将证书添加到信任库"
+        ])
+    
+    # 如果没有特定情况的建议，提供通用建议
+    if not suggestions:
+        suggestions.append("您的SSL连接正常，无需特殊配置")
+    
+    # 打印带正确序号的建议
+    for i, suggestion in enumerate(suggestions, 1):
+        lines = suggestion.split('\n')
+        print(f"{i}. {lines[0]}")
+        for line in lines[1:]:
+            print(line)
 
 async def main():
     """主函数"""
     try:
-        test_url = get_user_input()
-        results = await diagnose_ssl(test_url)
-        print_summary(results)
+        is_first_run = True
+        while True:
+            test_url = get_user_input(is_first_run)
+            # 首次运行后设置为False
+            is_first_run = False
+            results = await diagnose_ssl(test_url)
+            print_summary(results)
+            
+            # 询问用户是否继续检测
+            while True:
+                continue_choice = input("\n是否继续检测其他网址？(y/n): ").strip().lower()
+                if continue_choice in ['y', 'n']:
+                    break
+                print("❌ 请输入 y 或 n")
+            
+            if continue_choice == 'n':
+                break
     except KeyboardInterrupt:
         print("\n\n用户中断测试")
     except Exception as e:
