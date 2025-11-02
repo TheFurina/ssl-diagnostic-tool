@@ -29,8 +29,7 @@
 ### 方法一：使用批处理文件（仅 Windows）
 
 1. 下载一键包：
-   - `ssl_diagnostic_tool.py`
-   - `run_ssl_tool.bat`
+   - `ssl_diagnostic_toolkit_XXX.zip`
 
 2. 双击运行 `run_ssl_tool.bat`
 
@@ -96,6 +95,7 @@ python ssl_diagnostic_tool.py
 ssl_diagnostic_toolkit/
 ├── ssl_diagnostic_tool.py  # 主程序文件
 ├── run_ssl_tool.bat        # Windows 启动脚本
+├── config.json             # 配置文件
 ├── venv/                   # 虚拟环境目录（自动创建）
 └── requirements.txt        # 依赖列表（自动创建）
 ```
